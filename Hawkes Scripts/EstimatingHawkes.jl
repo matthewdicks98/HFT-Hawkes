@@ -385,8 +385,6 @@ function EventVisualization(params_hat, m, events_times, write)
 
         else
 
-            println(round(length(events_times[events[n]])/market_scale))
-
             Plots.scatter!([half_lives[n]], [Gamma_mn[n]], color = :red, label = events[n], legend = :outertopright, markercolor = n,
             markerstrokecolor = n, markershape=:circle, markersize = round(length(events_times[events[n]])/limit_scale),
             title = "Mutual and Self-excitations due to "*events[n]*"", xlabel = "Half-life", ylabel = "# Excitations", ylim = (-0.1, 1))
@@ -468,7 +466,7 @@ upper = fill(Inf, length(params_initial))
 
 #@time res1 = optimize(params -> LogLikelihood(params, T, events_times), params_initial, LBFGS(), autodiff = :forward, Optim.Options(show_trace = true, iterations = 10))
 
-@time res = optimize(params -> LogLikelihood(params, T, events_times), lower, upper, params_initial, Fminbox(LBFGS()), autodiff = :forward, Optim.Options(store_trace = true, show_trace = true, outer_iterations = 1, iterations = 200))
+@time res = optimize(params -> LogLikelihood(params, T, events_times), lower, upper, params_initial, Fminbox(LBFGS()), autodiff = :forward, Optim.Options(store_trace = true, show_trace = true, outer_iterations = 5, iterations = 200))
 
 println(res)
 println(Optim.converged(res))
@@ -496,13 +494,13 @@ EventVisualization(Optim.minimizer(res), 4, events_times, false)
 # Hypothesis tests to confirm iid exp durations
 
 # Exp assumptions
-println(round(pvalue(ExactOneSampleKSTest(validation_durations[1], Exponential(1))), digits = 4))
-println(round(pvalue(ExactOneSampleKSTest(validation_durations[2], Exponential(1))), digits = 4))
-println(round(pvalue(ExactOneSampleKSTest(validation_durations[3], Exponential(1))), digits = 4))
-println(round(pvalue(ExactOneSampleKSTest(validation_durations[4], Exponential(1))), digits = 4))
+#println(round(pvalue(ExactOneSampleKSTest(validation_durations[1], Exponential(1))), digits = 4))
+#println(round(pvalue(ExactOneSampleKSTest(validation_durations[2], Exponential(1))), digits = 4))
+#println(round(pvalue(ExactOneSampleKSTest(validation_durations[3], Exponential(1))), digits = 4))
+#println(round(pvalue(ExactOneSampleKSTest(validation_durations[4], Exponential(1))), digits = 4))
 
 # iid assumtions
-println(round(pvalue(LjungBoxTest(validation_durations[1], 100, 1)), digits = 4))
-println(round(pvalue(LjungBoxTest(validation_durations[2], 100, 1)), digits = 4))
-println(round(pvalue(LjungBoxTest(validation_durations[3], 100, 1)), digits = 4))
-println(round(pvalue(LjungBoxTest(validation_durations[4], 100, 1)), digits = 4))
+#println(round(pvalue(LjungBoxTest(validation_durations[1], 100, 1)), digits = 4))
+#println(round(pvalue(LjungBoxTest(validation_durations[2], 100, 1)), digits = 4))
+#println(round(pvalue(LjungBoxTest(validation_durations[3], 100, 1)), digits = 4))
+#println(round(pvalue(LjungBoxTest(validation_durations[4], 100, 1)), digits = 4))
