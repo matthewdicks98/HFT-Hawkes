@@ -491,6 +491,13 @@ EventVisualization(Optim.minimizer(res), 2, events_times, false)
 EventVisualization(Optim.minimizer(res), 3, events_times, false)
 EventVisualization(Optim.minimizer(res), 4, events_times, false)
 
+# if satisfied write params to a file
+open("Params/Estimated_Parameters.txt", "w") do file
+    for p in Optim.minimizer(res)
+        println(file, p)
+    end
+end
+
 # Hypothesis tests to confirm iid exp durations
 
 # Exp assumptions
