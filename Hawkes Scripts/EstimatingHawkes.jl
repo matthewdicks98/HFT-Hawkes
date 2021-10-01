@@ -183,54 +183,6 @@ function LogLikelihood(params, T, events_times)
 
 end
 
-function IntergratedDensity_M(T2, T1, m, lambda_0_m, alpha_m, beta_m, events_times)
-
-    # get the different events
-    events = collect(keys(events_times))
-
-    event_times_m = events_times[events[m]]
-
-    # precompute R
-    R_m = zeros(Real, length(events), length(event_times_m))
-    for n in 1:length(events)
-
-        # get all the recursive values for event n acting on event m
-        R_m[n,:] = R(m, n, beta_m, events_times)
-
-    end
-
-    # base rate thoughout the window
-    Lambda_m = lambda_0_m * (T2 - T1)
-
-    # loop over the events
-    for n in 1:length(events)
-
-        # get the exiting and decaying params for the nth event effecting the mth event
-        alpha_mn = alpha_m[n]
-        beta_mn = beta_m[n]
-
-        # set the mth and nth event times
-        event_times_m = events_times[events[m]]
-        event_times_n = events_times[events[n]]
-
-        Lambda_m = Lambda_m + (alpha_mn/beta_mn) * R_m[n,findall(x -> x == T1, event_times_m)[1]] * (1 - exp(-beta_mn * (T2 - T1)))
-
-        for k in 1:length(event_times_n)
-
-            if event_times_n[k] >= T1 && event_times_n[k] < T2
-
-                Lambda_m = Lambda_m + (1 - exp(-beta_mn * (T2 - event_times_n[k])))
-
-            end
-
-        end
-
-    end
-
-    return Lambda_m
-
-end
-
 function Durations(params_hat, events_times)
 
     # get the different events
@@ -268,14 +220,6 @@ function Durations(params_hat, events_times)
         end
 
         push!(durations, diff(intensities))
-
-        #for i in 1:length(event_times_m)
-
-        #    intensities[i] = IntergratedDensity_M(event_times_m[i], event_times_m[i-1], m, lambda_0_m, alpha_m, beta_m, events_times)
-
-        #end
-
-        #push!(durations, intensities)
 
     end
 
@@ -368,26 +312,26 @@ function EventVisualization(params_hat, m, events_times, write)
     # get the half lives of the excitation event alpha_mn
     half_lives = log(2) ./ beta[:,m]
 
+    println(Gamma_mn)
+
     market_scale = max(length(events_times[events[2]]), length(events_times[events[4]]))/10
     limit_scale = max(length(events_times[events[1]]), length(events_times[events[3]]))/20
 
     s = Plots.scatter([half_lives[1]], [Gamma_mn[1]], color = :red, label = events[1], legend = :outertopright, markercolor = 1,
     markerstrokecolor = 1, markershape=:circle, markersize = Int(round(length(events_times[events[1]])/limit_scale)),
-    title = "Mutual and Self-excitations due to "*events[1]*"", xlabel = "Half-life", ylabel = "# Excitations", ylim = (-0.1, 1))
+    title = "Mutual and Self-excitations due to "*events[m]*"", xlabel = "Half-life", ylabel = "# Excitations", ylim = (-0.1, 1))
 
     for n in 2:length(events)
 
         if n % 2 == 0
 
             Plots.scatter!([half_lives[n]], [Gamma_mn[n]], color = :red, label = events[n], legend = :outertopright, markercolor = n,
-             markerstrokecolor = n, markershape=:circle, markersize = Int(round(length(events_times[events[n]])/market_scale)),
-             title = "Mutual and Self-excitations due to "*events[n]*"", xlabel = "Half-life", ylabel = "# Excitations", ylim = (-0.1, 1))
+             markerstrokecolor = n, markershape=:circle, markersize = Int(round(length(events_times[events[n]])/market_scale)), ylim = (-0.1, 1))
 
         else
 
             Plots.scatter!([half_lives[n]], [Gamma_mn[n]], color = :red, label = events[n], legend = :outertopright, markercolor = n,
-            markerstrokecolor = n, markershape=:circle, markersize = round(length(events_times[events[n]])/limit_scale),
-            title = "Mutual and Self-excitations due to "*events[n]*"", xlabel = "Half-life", ylabel = "# Excitations", ylim = (-0.1, 1))
+            markerstrokecolor = n, markershape=:circle, markersize = round(length(events_times[events[n]])/limit_scale), ylim = (-0.1, 1))
 
         end
 
@@ -461,11 +405,6 @@ params_initial = append!(append!(lambda_0_initial, alpha_initial), beta_initial)
 lower = fill(0.0, length(params_initial)) # params >= 0
 upper = fill(Inf, length(params_initial))
 
-#fun = TwiceDifferentiable(params -> LogLikelihood(params, T, events_times), params_initial)
-#fun_constraints = TwiceDifferentiableConstraints(lower, upper)
-
-#@time res1 = optimize(params -> LogLikelihood(params, T, events_times), params_initial, LBFGS(), autodiff = :forward, Optim.Options(show_trace = true, iterations = 10))
-
 @time res = optimize(params -> LogLikelihood(params, T, events_times), lower, upper, params_initial, Fminbox(LBFGS()), autodiff = :forward, Optim.Options(store_trace = true, show_trace = true, outer_iterations = 5, iterations = 200))
 
 println(res)
@@ -486,10 +425,10 @@ PlotACF(validation_durations, 100, events_times, false)
 println(SpectralRadius(Optim.minimizer(res), events_times))
 
 # create the event generations Plots
-EventVisualization(Optim.minimizer(res), 1, events_times, false)
-EventVisualization(Optim.minimizer(res), 2, events_times, false)
-EventVisualization(Optim.minimizer(res), 3, events_times, false)
-EventVisualization(Optim.minimizer(res), 4, events_times, false)
+EventVisualization(params_initial, 1, events_times, false)
+EventVisualization(params_initial, 2, events_times, false)
+EventVisualization(params_initial, 3, events_times, false)
+EventVisualization(params_initial, 4, events_times, false)
 
 # if satisfied write params to a file
 open("Params/Estimated_Parameters.txt", "w") do file
@@ -497,17 +436,3 @@ open("Params/Estimated_Parameters.txt", "w") do file
         println(file, p)
     end
 end
-
-# Hypothesis tests to confirm iid exp durations
-
-# Exp assumptions
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[1], Exponential(1))), digits = 4))
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[2], Exponential(1))), digits = 4))
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[3], Exponential(1))), digits = 4))
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[4], Exponential(1))), digits = 4))
-
-# iid assumtions
-#println(round(pvalue(LjungBoxTest(validation_durations[1], 100, 1)), digits = 4))
-#println(round(pvalue(LjungBoxTest(validation_durations[2], 100, 1)), digits = 4))
-#println(round(pvalue(LjungBoxTest(validation_durations[3], 100, 1)), digits = 4))
-#println(round(pvalue(LjungBoxTest(validation_durations[4], 100, 1)), digits = 4))
