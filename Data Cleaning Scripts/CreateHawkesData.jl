@@ -56,6 +56,6 @@ function createHawkesData(date::String, ticker::String, write::Bool)
 
 end
 
-createHawkesData("10/07/2019","NPN", true)
-createHawkesData("08/07/2019","NPN", true)
-createHawkesData("08/07/2019","AGL", true)
+createHawkesData("10/07/2019","NPN", false)
+createHawkesData("08/07/2019","NPN", false)
+createHawkesData("08/07/2019","AGL", false)

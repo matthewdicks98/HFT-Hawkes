@@ -462,18 +462,13 @@ PlotEvents(events_times, false)
 # if happy write event times to a jld database
 save("test_data\\Clean\\HAWKES\\HAWKES_SIMULATED.jld", "HawkesDataSim", events_times)
 
-# Exp assumptions
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[1], Exponential(1))), digits = 4))
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[2], Exponential(1))), digits = 4))
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[3], Exponential(1))), digits = 4))
-#println(round(pvalue(ExactOneSampleKSTest(validation_durations[4], Exponential(1))), digits = 4))
+# count sim
+length(load("test_data\\Clean\\HAWKES\\HAWKES_SIMULATED.jld")["HawkesDataSim"]["LOB"])
+length(load("test_data\\Clean\\HAWKES\\HAWKES_SIMULATED.jld")["HawkesDataSim"]["MOB"])
+length(load("test_data\\Clean\\HAWKES\\HAWKES_SIMULATED.jld")["HawkesDataSim"]["LOS"])
+length(load("test_data\\Clean\\HAWKES\\HAWKES_SIMULATED.jld")["HawkesDataSim"]["MOS"])
 
-# iid assumtions
-#println(round(pvalue(LjungBoxTest(validation_durations[1], 100, 1)), digits = 4))
-#println(round(pvalue(LjungBoxTest(validation_durations[2], 100, 1)), digits = 4))
-#println(round(pvalue(LjungBoxTest(validation_durations[3], 100, 1)), digits = 4))
-#println(round(pvalue(LjungBoxTest(validation_durations[4], 100, 1)), digits = 4))
-
+# count obs
 length(load("test_data\\Clean\\HAWKES\\HAWKES_10_07_2019_NPN.jld")["HawkesData"]["LOB"])
 length(load("test_data\\Clean\\HAWKES\\HAWKES_10_07_2019_NPN.jld")["HawkesData"]["MOB"])
 length(load("test_data\\Clean\\HAWKES\\HAWKES_10_07_2019_NPN.jld")["HawkesData"]["LOS"])
